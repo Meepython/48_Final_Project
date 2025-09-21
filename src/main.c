@@ -1,41 +1,45 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include "./second_main.c"
 
-// Version 0.1
+// Version 0.1a
+
+void display_data(), create_user();
 
 int main() {
-    int answer;
+    int choice;
 
     while (1) {
-        scanf("%d", &answer);
+       
+        display_data();
+    
+        printf("Choice: ");
+        scanf("%d", &choice);
+        printf("\n");
 
-        switch (answer)
-        {
-        case 1:
-            printf("New user\n");
-            break;
-        case 2:
-            printf("Search user\n");
-            break;
-        case 3:
-            printf("Edit user\n");
-            break;
-        case 4:
-            printf("Delete user\n");
-            break;
-        default:
-            printf("Invalid Input!\n");
-            break;
-        }
+        menu_check(choice);
+    
     }
-
     return 0;
 }
 
-void display_data() {
-    printf("========================= \n");
-    printf("1. New user data \n");
-    printf("2. Search user data \n");
-    printf("3. Edit user data \n");
-    printf("4. Delete user data \n");
-    printf("========================== \n");
+void create_user() {
+    
+    char name[50];
+    printf("Input Name: ");
+    scanf("%s", name);
+
+    FILE* file = fopen("data.csv", "w");
+
+    if (file == NULL) {
+        printf("File Failed: %p\n", file);
+    } 
+
+    fprintf(file, "The owner of this file is: %s \n", name);
+
+    if (fclose(file) == 0) {
+        printf("Close the file\n");
+    } else {
+        printf("Cannot close the file\n");
+    }
 }
