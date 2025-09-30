@@ -21,23 +21,7 @@ void clear_line() {
 }
 
 void chomp(char *c) {
-    c[strcspn(c, "\n")] = 0;
-}
-
-void open_file(int mode) {
-
-    switch (mode) 
-    {
-    case 1:
-        
-        break;
-    case 2:
-        /*  */
-        break;
-    default:
-        break;
-    }
-
+    c[strcspn(c, "\r\n")] = 0;
 }
 
 void list_all() {
@@ -102,7 +86,7 @@ void display_data() {
     printf("===============================================================         \n");
 }
 
-void create_user() {
+void create_record() {
 
     // Open CSV file in append mode
     FILE *file = fopen("employees.csv", "a");
@@ -118,7 +102,6 @@ void create_user() {
     float new_salary;
     char payment_date[100];
     
-    clear_line();
     // New Employee's Name
     printf("New name (Name Surname): ");
     fgets(new_name, sizeof new_name, stdin);
@@ -158,11 +141,83 @@ void create_user() {
     }
 }
 
-void search_user() {
+void search_record() {
+    char line[512], buffer[32], query[128];
+    int found = 0; 
+    int mode; // Have two modes, 1) Name, 2) Position 
+    
+    // Mode Query
+    do
+    {
+        printf("Search by (1) Name (2) Position, (1-2): "); 
+        fgets(buffer, sizeof buffer, stdin);
+    } while ((sscanf(buffer, "%d", &mode) != 1) && (mode == 1 || mode == 2));
+    
+    switch (mode)
+    {
+    case 1:
+        printf("Input Name (eg. John Doe): ");
+        fgets(query, sizeof query, stdin);
+        break;
+    case 2:
+        printf("Input Position (Developer): ");
+        fgets(query, sizeof query, stdin);
+        break;
+    default:
+        printf("Invalid Input\n");
+        break;
+    }
+    chomp(query);
 
+    FILE *file = fopen("employees.csv", "r");
+    if (!file) { perror("Couldn't Open the File!\n"); return;}
+
+    // Read the first line of file
+    if (fgets(line, sizeof line ,file) == NULL) {
+        printf("File Empty.\n");
+        return;
+    }
+
+    printf("\n-----------------------------------------------------------------------------\n");
+    printf("%-24s %-24s %-14s %-12s\n", "EmployeeName", "Position", "Salary", "PaymentData");
+    printf("-----------------------------------------------------------------------------\n");
+
+    while (fgets(line, sizeof line, file)) {
+        chomp(line);
+        if (!*line) { continue;} // Skip blank string
+        
+        char *name = strtok(line, ",");
+        char *position = strtok(NULL, ",");
+        char *salary = strtok(NULL, ",");
+        char *paymentdata = strtok(NULL, ",");
+
+        switch (mode)
+        {
+        case 1: // Name
+            if (strcmp(name, query) == 0) {
+                printf("%-24s %-24s %-14s %-12s\n", name, position, salary, paymentdata);
+                ++found;
+            }
+            break;
+        case 2: // Position
+            if (strcmp(position, query) == 0) {
+                printf("%-24s %-24s %-14s %-12s\n", name, position, salary, paymentdata);
+                ++found;
+            }
+            break;
+        default:
+            printf("Error\n");
+            break;
+        }
+    }
+    printf("-----------------------------------------------------------------------------\n\n");
+
+    if (!found) {
+        printf("Found NOTHIGN!\n");
+    }
 }
 
-void update_user() {
+void update_record() {
     FILE *file = fopen("employees.csv", "r");
     FILE *temp = fopen("temp.csv", "w");
 
@@ -174,7 +229,7 @@ void update_user() {
 
 }
 
-void delete_user() {
+void delete_record() {
     FILE *file = fopen("employees.csv", "r");
     FILE *temp = fopen("temp.csv", "w");
 
@@ -187,50 +242,44 @@ void delete_user() {
 int main() {
     char input_choice[64];
     int choice;
+    
     while (1) {
         display_data();
-        printf("Enter your choice: ");
-       
-        if(!fgets(input_choice, sizeof input_choice ,stdin)) {
-            continue; // EOF
-        }
-
+        printf("Enter your choice (1-7): ");
+        fgets(input_choice, sizeof input_choice ,stdin);
         chomp(input_choice);
     
-        if (sscanf(input_choice, "%d", &choice) != 1) {
+        if ((sscanf(input_choice, "%d", &choice) != 1) || (choice > 7 || choice < 1)) {
             printf("\n\n-------- WARNING ---------------------------\n");
             printf(" \033[33m Invalid input lil bro 🥀 \033[0m         \n");
             printf("--------------------------------------------\n\n");
             continue;
         }
-
-        if (choice > 7 || choice < 1) {
-            printf("\n\n-------- WARNING ---------------------------\n");
-            printf(" \033[33m Choose 1-7 lil bro 🥀 \033[0m         \n");
-            printf("--------------------------------------------\n\n");
-            continue;
-        }
-
+        
+        /*
+        scanf("%d", &choice);
+        clear_line(); //Buffer
+        */
+       
         switch (choice)
         {
         case 1: 
             list_all(); 
             break;
         case 2: 
-            create_user(); 
+            create_record(); 
             break;
         case 3: 
-            //search_user(); 
+            search_record(); 
             break;
         case 4:
-            //update_user(); 
+            update_record(); 
             break;
         case 5: 
-            /*Delete*/ 
+            delete_record(); 
             break;
         case 6: 
-            /*Unit Test*/ 
-            //open_file(1);
+            //Unit Test
             break;
         case 7: 
             return 0; 
@@ -239,6 +288,8 @@ int main() {
             printf("Invalid Input!\n");  
         }
     
-    }
+    } 
+
     return 0;
+    
 }
