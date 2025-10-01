@@ -26,8 +26,7 @@ void clear_line() {
     }
 }
 
-
-void check_csv() {\
+void check_csv() {
     char ans[64];
     int choice;
 
@@ -260,77 +259,136 @@ void search_record() {
     printf("-----------------------------------------------------------------------------\n\n");
 }
 
-void update_record() {
-    FILE *file = fopen("employees.csv", "r");
-    FILE *temp = fopen("temp.csv", "w");
+void update_record(void) {
+    char target[128], line[512], buf[64];
+    int field = 0;      // 1=position, 2=salary, 3=date
+    int updated = 0;
 
-    if (!file || !temp) {
-        perror("Couldn't open the file or not found.\n");
-        return;
+    printf("Exact employee name to update: ");
+    if (!fgets(target, sizeof target, stdin)) return;
+    chomp(target); 
+    if (!*target){ puts("Empty name. Cancelled."); return; }
+
+    for (;;) {
+        printf("Update field: 1) Position  2) Salary  3) PaymentDate : ");
+        if (!fgets(buf, sizeof buf, stdin)) return;
+        if (sscanf(buf, "%d", &field) == 1 && field >= 1 && field <= 3) break;
+        puts("Enter 1, 2, or 3.");
     }
 
+    FILE *in  = fopen("employees.csv", "r");
+    if (!in){ perror("open employees.csv"); return; }
+    FILE *out = fopen("temp.csv", "w");
+    if (!out){ perror("open temp.csv"); fclose(in); return; }
 
+    // copy header if present
+    if (fgets(line, sizeof line, in)) fputs(line, out);
+    else { fclose(in); fclose(out); remove("temp.csv"); puts("File empty."); return; }
+
+    while (fgets(line, sizeof line, in)){
+        chomp(line);
+        if (!*line) { continue; }
+
+        // split CSV into 4 fields
+        char *name = strtok(line, ",");
+        char *pos  = strtok(NULL, ",");
+        char *sal  = strtok(NULL, ",");
+        char *date = strtok(NULL, ",");
+
+        if (!(name && pos && sal && date)) continue;
+
+        // start with existing salary as the default
+        double salary_num = strtod(sal, NULL);
+
+        if (strcmp(name, target) == 0) {           // <-- FIXED: match only when equal
+        // if (ieq(name, target)) {                // <-- use this instead for case-insensitive
+            if (field == 1){
+                char newpos[128];
+                printf("New position: ");
+                if (fgets(newpos, sizeof newpos, stdin)){
+                    chomp(newpos); 
+                    if (*newpos) strcpy(pos, newpos);
+                }
+            } else if (field == 2){
+                char sline[64];
+                printf("New salary: ");
+                if (fgets(sline, sizeof sline, stdin)){
+                    double v;
+                    if (sscanf(sline, "%lf", &v) == 1) salary_num = v;
+                    else puts("Invalid number. Keeping old salary.");
+                }
+            } else { // field == 3
+                char newdate[32];
+                printf("New date (YYYY-MM-DD): ");
+                if (fgets(newdate, sizeof newdate, stdin)){
+                    chomp(newdate); 
+                    if (*newdate) strcpy(date, newdate);
+                }
+            }
+            updated++;
+        }
+
+        // write row back (normalized)
+        fprintf(out, "%s,%s,%.2f,%s\n", name, pos, salary_num, date);
+    }
+
+    fclose(in); fclose(out);
+
+    if (updated > 0){
+        remove("employees.csv");
+        rename("temp.csv", "employees.csv");
+        printf("✓ Updated %d row(s).\n", updated);
+    } else {
+        remove("temp.csv");
+        puts("Name not found. Nothing updated.");
+    }
 }
 
-void delete_record() {
+void delete_record(void){
+    char target[128], line[512];
+    int deleted = 0;
 
-    char target[128];
-    char line[512];
-    int deleted_count = 0;
-    
-    printf("Exact name to delete (eg. Walt Heisenberg): ");
-    if (!fgets(target ,sizeof target,stdin)) { return; }
-    chomp(target);
-    if (!*target) { puts("Empty Name, Cancelled.\n"); return; }
+    printf("Exact name to delete: ");
+    if (!fgets(target, sizeof target, stdin)) return;
+    chomp(target); 
+    if (!*target){ puts("Empty name."); return; }
 
-    FILE *file = fopen("employees.csv", "r");
-    FILE *temp = fopen("temp.csv", "w");
+    FILE *in = fopen("employees.csv","r");
+    FILE *out = fopen("temp.csv","w");
+    if (!in || !out){ perror("open"); if(in)fclose(in); if(out)fclose(out); return; }
 
-    if (!file || !temp) {
-        perror("Couldn't open the file or not found.\n");
-        return;
-    }
+    if (fgets(line,sizeof line,in)) fputs(line,out);   // header
+    else { fclose(in); fclose(out); remove("temp.csv"); puts("Empty file."); return; }
 
-    // Copy the header of original file to the temporary file
-    if (fgets(line ,sizeof line, file)) {
-        fputs(line, temp);
-    } else {
-        fclose(file); fclose(temp);
-        remove("temp.csv");
-        puts("The File is Empty, Nothing to delete bozo\n");
-        return;
-    }
-
-    while (fgets(line, sizeof line, file)) {
+    while (fgets(line,sizeof line,in)){
         chomp(line);
-        if (!*line) { continue; } // Skip the blank line
+        if (!*line) continue;
 
         char *name = strtok(line, ",");
         char *pos  = strtok(NULL, ",");
         char *sal  = strtok(NULL, ",");
         char *date = strtok(NULL, ",");
 
-        if (strcmp(name, target)) {
-            ++deleted_count;
-            continue; // Skip the target's line to remove
+        if (!(name && pos && sal && date)) continue;
+
+        if (strcmp(name, target) == 0) {   // delete ONLY matching name
+            deleted++;
+            continue;                      // skip writing -> removed
         }
 
-        fprintf(temp, "%s,%s,%s,%s\n", name, pos, sal, date);
+        // keep everyone else
+        fprintf(out, "%s,%s,%s,%s\n", name, pos, sal, date);
     }
 
-    fclose(temp); fclose(file);
+    fclose(in); fclose(out);
 
-    if (deleted_count > 0) {
+    if (deleted){
         remove("employees.csv");
-        rename("temp.csv", "employees.csv");
-
-        if (deleted_count == 1)
-            printf("✓ Deleted \"%s\".\n", target);
-        else
-            printf("✓ Deleted %d rows named \"%s\".\n", deleted_count, target);
+        rename("temp.csv","employees.csv");
+        printf("✓ Deleted %d row(s) named \"%s\".\n", deleted, target);
     } else {
-        puts("Nothing to Delete\n");
         remove("temp.csv");
+        puts("Name not found. Nothing deleted.");
     }
 }
 
