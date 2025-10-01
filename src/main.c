@@ -372,8 +372,23 @@ void delete_record(void){
         if (!(name && pos && sal && date)) continue;
 
         if (strcmp(name, target) == 0) {   // delete ONLY matching name
-            deleted++;
-            continue;                      // skip writing -> removed
+            char confirm[100];
+            int num;
+
+            for (;;) {
+                printf("Confirm Delete? : 1) Yes  2) No : ");
+                if (!fgets(confirm, sizeof confirm, stdin)) return;
+                if (sscanf(confirm, "%d", &num) == 1 && num >= 1 && num <= 2) break;
+                puts("Enter 1 or 2.");
+            }
+
+            if (num == 1) {
+                deleted++;
+                continue;    // skip writing -> removed
+            } else {
+                puts("Cancel."); 
+                return;
+            }
         }
 
         // keep everyone else
