@@ -10,6 +10,12 @@
     Jane Smith, Developer, 40000, 2025-08-05
 */
 
+
+
+void chomp(char *c) {
+    c[strcspn(c, "\r\n")] = 0;
+}
+
 void clear_line() {
     int c = getchar();
     if (c == EOF) return;
@@ -20,8 +26,46 @@ void clear_line() {
     }
 }
 
-void chomp(char *c) {
-    c[strcspn(c, "\r\n")] = 0;
+
+void check_csv() {\
+    char ans[64];
+    int choice;
+
+    FILE *file = fopen("employees.csv", "r");
+
+    if (!file) {
+        perror("Couldn't open the file or not found.\n");
+
+        printf("Do you wish to create new employees file\n");
+        printf("1) Yes 2) No \n");
+        printf("Input: ");
+
+        if (!fgets(ans, sizeof ans, stdin)) { return; }
+        chomp(ans);
+
+         if ((sscanf(ans, "%d", &choice) != 1) || (choice > 7 || choice < 1)) {
+            printf("\n\n-------- WARNING ---------------------------\n");
+            printf(" \033[33m Invalid input lil bro 🥀 \033[0m         \n");
+            printf("--------------------------------------------\n\n");
+            return;
+         }
+        
+        if (choice == 1) {
+            FILE *newFile = fopen("employees.csv", "w");
+
+            if (!newFile) {
+                perror("Couldn't open the file or not found.\n");
+                return;
+            }
+
+            fputs("EmployeeName,Position,Salary,PaymentDate\n", newFile);
+            //fprintf(newFile, "EmployeeName,Position,Salary,PaymentDate\n");
+            fclose(newFile);
+        } else if (choice == 2) {
+            puts("K bro, find employees.csv then.");
+        } 
+
+    }
 }
 
 void list_all() {
@@ -74,15 +118,15 @@ void list_all() {
 
 void display_data() {
     printf("===============================================================         \n");
-    printf("   \e[1m Employee Payroll System 🏦 \e[0m            \n");
+    printf("   \e[1m Employee Payroll System 🏦 \e[0m                                \n");
     printf("===============================================================         \n");
-    printf("1) List all record                                   \n");
-    printf("2) Create salary record                              \n");
-    printf("3) Search salary record                              \n");
-    printf("4) Update salary record                              \n");
-    printf("5) Delete salary record                              \n");
-    printf("6) Unit test [2]                                     \n");
-    printf("7) Exit                                              \n");
+    printf("1) List all record                                                      \n");
+    printf("2) Create salary record                                                 \n");
+    printf("3) Search salary record                                                 \n");
+    printf("4) Update salary record                                                 \n");
+    printf("5) Delete salary record                                                 \n");
+    printf("6) Unit test [2]                                                        \n");
+    printf("7) Exit                                                                 \n");
     printf("===============================================================         \n");
 }
 
@@ -210,11 +254,10 @@ void search_record() {
             break;
         }
     }
-    printf("-----------------------------------------------------------------------------\n\n");
-
     if (!found) {
-        printf("Found NOTHIGN!\n");
+        printf("!\n");
     }
+    printf("-----------------------------------------------------------------------------\n\n");
 }
 
 void update_record() {
@@ -230,6 +273,16 @@ void update_record() {
 }
 
 void delete_record() {
+
+    char target[128];
+    char line[512];
+    int deleted_count = 0;
+    
+    printf("Exact name to delete (eg. Walt Heisenberg): ");
+    if (!fgets(target ,sizeof target,stdin)) { return; }
+    chomp(target);
+    if (!*target) { puts("Empty Name, Cancelled.\n"); return; }
+
     FILE *file = fopen("employees.csv", "r");
     FILE *temp = fopen("temp.csv", "w");
 
@@ -237,12 +290,56 @@ void delete_record() {
         perror("Couldn't open the file or not found.\n");
         return;
     }
+
+    // Copy the header of original file to the temporary file
+    if (fgets(line ,sizeof line, file)) {
+        fputs(line, temp);
+    } else {
+        fclose(file); fclose(temp);
+        remove("temp.csv");
+        puts("The File is Empty, Nothing to delete bozo\n");
+        return;
+    }
+
+    while (fgets(line, sizeof line, file)) {
+        chomp(line);
+        if (!*line) { continue; } // Skip the blank line
+
+        char *name = strtok(line, ",");
+        char *pos  = strtok(NULL, ",");
+        char *sal  = strtok(NULL, ",");
+        char *date = strtok(NULL, ",");
+
+        if (strcmp(name, target)) {
+            ++deleted_count;
+            continue; // Skip the target's line to remove
+        }
+
+        fprintf(temp, "%s,%s,%s,%s\n", name, pos, sal, date);
+    }
+
+    fclose(temp); fclose(file);
+
+    if (deleted_count > 0) {
+        remove("employees.csv");
+        rename("temp.csv", "employees.csv");
+
+        if (deleted_count == 1)
+            printf("✓ Deleted \"%s\".\n", target);
+        else
+            printf("✓ Deleted %d rows named \"%s\".\n", deleted_count, target);
+    } else {
+        puts("Nothing to Delete\n");
+        remove("temp.csv");
+    }
 }
 
 int main() {
     char input_choice[64];
     int choice;
     
+    check_csv();
+
     while (1) {
         display_data();
         printf("Enter your choice (1-7): ");
