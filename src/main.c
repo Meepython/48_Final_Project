@@ -69,10 +69,6 @@ void check_csv() {
 
 void list_all() {
     char line[1000];
-    char *EmployeeName;
-    char *Position;
-    char *Salary;
-    char *PaymentData;
 
     FILE *file = fopen("employees.csv", "r");
 
@@ -301,7 +297,6 @@ void update_record(void) {
         double salary_num = strtod(sal, NULL);
 
         if (strcmp(name, target) == 0) {           // <-- FIXED: match only when equal
-        // if (ieq(name, target)) {                // <-- use this instead for case-insensitive
             if (field == 1){
                 char newpos[128];
                 printf("New position: ");
