@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "typeinfo": "c",
+        "chrono": "c",
+        "text_encoding": "c",
+        "__node_handle": "c",
+        "locale": "c"
+    }
+}

@@ -8,3 +8,4 @@
 - Update the salary data, ex. amount of salary in this month
 - Delete the data by user's name
 - Display menu via Terminal
+

@@ -1,14 +1,9 @@
-// build: gcc -std=c11 -Wall -Wextra -Wpedantic -DTESTING -DCSV_PATH=\"test_employees.csv\" -o test_unit test_unit.c
-// run : ./test_unit
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-// point the app at a test CSV and import functions (main() is excluded via TESTING)
 #define TESTING
-#define CSV_PATH "test_employees.csv"
 #include "payroll.c"
 
 // ---------- helpers ----------
@@ -27,9 +22,6 @@ static void feed_stdin_from(const char *path){
     assert(in != NULL);
 }
 
-// ========== TESTS (AAA pattern) ==========
-
-// 1) create_record(): happy path appends a normalized row
 static void test_create_record_appends_row(void){
     // Arrange
     write_file(CSV_PATH, CSV_HEADER);
@@ -51,7 +43,6 @@ static void test_create_record_appends_row(void){
     remove("tmp.in");
 }
 
-// 2) update_record(): updates position for an exact name
 static void test_update_record_changes_position(void){
     // Arrange
     write_file(CSV_PATH,
