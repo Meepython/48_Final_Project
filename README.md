@@ -1,7 +1,6 @@
 # Employee Payroll Management (C)
 
 Simple terminal app to manage monthly salary records stored in a CSV file.  
-Good for practicing C strings, file I/O, and menu-driven programs. Includes unit tests and an end-to-end (E2E) test.
 
 ---
 
