@@ -4,7 +4,7 @@
 #include <ctype.h>
 
 #ifndef CSV_PATH
-#define CSV_PATH   "employees.csv"
+#define CSV_PATH "employees.csv"
 #endif
 
 #ifndef CSV_HEADER
@@ -14,7 +14,7 @@
 #define LINE_CAP   512
 #define NAME_CAP   128
 #define POS_CAP    128
-#define DATE_CAP   32
+#define DATE_CAP   32 
 #define NUM_CAP    64
 #define CHOICE_CAP 64
 
@@ -188,7 +188,6 @@ static void create_record(void){
     if (!fgets(payment_date, sizeof payment_date, stdin)) { fclose(file); return; }
     chomp(payment_date); trim(payment_date);
 
-    /* no spaces after commas -> test-friendly */
     fprintf(file, "%s,%s,%.2f,%s\n", new_name, new_position, new_salary, payment_date);
 
     if (fclose(file) == 0) {
