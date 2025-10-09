@@ -514,11 +514,11 @@ int main(void){
         }
 
         switch (choice){
-            case 1: list_all(); break;
-            case 2: create_record(); break;
-            case 3: search_record(); break;
-            case 4: update_record(); break;
-            case 5: delete_record(); break;
+            case 1: list_all();       break;
+            case 2: create_record();  break;
+            case 3: search_record();  break;
+            case 4: update_record();  break;
+            case 5: delete_record();  break;
             case 6: run_unit_tests(); run_e2e_test(); break;
             case 7: return 0;
         }
